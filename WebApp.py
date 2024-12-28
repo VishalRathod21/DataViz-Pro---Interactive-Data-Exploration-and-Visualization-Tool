@@ -15,7 +15,7 @@ st.set_page_config(
 st.title(":red[Data] Wizard Pro ")
 
 # Updated subheader and description of the purpose of the app
-st.subheader("Seamless :Red[Unlock the Power of Data Exploration, Transformation, and Visualization] of Your Data", divider="royalblue")
+st.subheader(":red[Seamless] Unlock the Power of Data Exploration, Transformation, and Visualization of Your Data",divider="rainbow")
 st.write(":grey[The purpose of this Data Wizard Pro web application is to offer an intuitive and user-friendly platform for comprehensive data analysis. Whether you're a data analyst, scientist, or business professional, this tool will help you quickly understand, clean, and transform your datasets, and visualize meaningful insights.]")
 
 # File upload description and instructions
@@ -37,7 +37,7 @@ if file:
                 data = pd.read_excel(file)
             elif file.name.endswith('json'):
                 data = pd.read_json(file)
-            
+
             # Displaying the dataframe
             st.dataframe(data)
             st.info('File is successfully uploaded', icon='🚨')
@@ -75,7 +75,7 @@ if file:
                     column = st.selectbox('Choose Column Name', options=list(data.columns))
                 with col2:
                     toprows = st.number_input('Top rows', min_value=1, step=1)
-                
+
                 count = st.button('Count')
                 if count:
                     result = data[column].value_counts().reset_index().head(toprows)
@@ -110,7 +110,7 @@ if file:
                     operation_col = st.selectbox('Choose column for operation', options=list(data.columns))
                 with col3:
                     operation = st.selectbox('Choose operation', options=['sum', 'max', 'min', 'mean', 'count'])
-                
+
                 if groupby_cols:
                     result = data.groupby(groupby_cols).agg(
                         newcol=(operation_col, operation)
@@ -118,7 +118,7 @@ if file:
 
                     st.dataframe(result)
 
-                    # Data Visualization
+             # Data Visualization
                     st.subheader(":red[Data Visualization]", divider="rainbow")
                     graph_type = st.selectbox("Choose graph type", options=["line", "bar", "scatter", "pie", "sunburst", "histogram", "box", "heatmap"])
 
@@ -213,68 +213,38 @@ if file:
                     data_cleaned = data[(abs_z_scores < threshold).all(axis=1)]
                     st.dataframe(data_cleaned)
 
-                # New Functionalities
-                # Data Sampling
-                st.subheader(":green[Data Sampling]", divider="green")
-                with st.expander("Random Sampling"):
-                    sample_size = st.number_input("Sample size", min_value=1, max_value=data.shape[0], value=10, step=1)
-                    sampled_data = data.sample(n=sample_size)
-                    st.dataframe(sampled_data)
+            # New Functionalities
+            # Data Sampling
+            st.subheader(":green[Data Sampling]", divider="green")
+            with st.expander("Random Sampling"):
+                sample_size = st.number_input("Sample size", min_value=1, max_value=data.shape[0], value=10, step=1)
+                sampled_data = data.sample(n=sample_size)
+                st.dataframe(sampled_data)
 
-                # Correlation Matrix Heatmap
-                st.subheader(":blue[Correlation Matrix Heatmap]", divider="blue")
-                corr = data.corr()
-                fig = go.Figure(data=go.Heatmap(z=corr.values, x=corr.columns, y=corr.columns, colorscale="Viridis"))
-                st.plotly_chart(fig)
+            # Correlation Matrix Heatmap
+            st.subheader(":blue[Correlation Matrix Heatmap]", divider="blue")
+            corr = data.corr()
+            fig = go.Figure(data=go.Heatmap(z=corr.values, x=corr.columns, y=corr.columns, colorscale="Viridis"))
+            st.plotly_chart(fig)
 
-                # Interactive Data Filtering
-                st.subheader(":orange[Interactive Data Filtering]", divider="orange")
-                st.write("Use sliders and inputs to filter the dataset.")
-                filter_column = st.selectbox("Select column to filter by", options=list(data.columns))
-                min_value = st.number_input(f"Minimum {filter_column}", value=float(data[filter_column].min()))
-                max_value = st.number_input(f"Maximum {filter_column}", value=float(data[filter_column].max()))
-                filtered_data = data[(data[filter_column] >= min_value) & (data[filter_column] <= max_value)]
-                st.dataframe(filtered_data)
+            # Interactive Data Filtering
+            st.subheader(":orange[Interactive Data Filtering]", divider="orange")
+            st.write("Use sliders and inputs to filter the dataset.")
+            filter_column = st.selectbox("Select column to filter by", options=list(data.columns))
+            min_value = st.number_input(f"Minimum {filter_column}", value=float(data[filter_column].min()))
+            max_value = st.number_input(f"Maximum {filter_column}", value=float(data[filter_column].max()))
+            filtered_data = data[(data[filter_column] >= min_value) & (data[filter_column] <= max_value)]
+            st.dataframe(filtered_data)
 
-                # Export Raw Data
-                st.subheader(":red[Export Raw Data]", divider="red")
-                st.write("Download your data in various formats.")
-                export_format = st.selectbox("Select format", options=["CSV", "Excel", "JSON"])
-                if st.button("Export"):
-                    if export_format == "CSV":
-                        st.download_button("Download CSV", data=data.to_csv(index=False), file_name="dataset.csv")
-                    elif export_format == "Excel":
-                        st.download_button("Download Excel", data=data.to_excel(index=False), file_name="dataset.xlsx")
-                    elif export_format == "JSON":
-                        st.download_button("Download JSON", data=data.to_json(orient='records'), file_name="dataset.json")
-
-                # Automated Missing Value Imputation
-                st.subheader(":purple[Automated Missing Value Imputation]", divider="purple")
-                if st.checkbox("Impute Missing Values with Mean/Median/Mode"):
-                    impute_column = st.selectbox("Select column to impute", options=list(data.columns))
-                    impute_method = st.selectbox("Choose method", options=["Mean", "Median", "Mode"])
-                    if impute_method == "Mean":
-                        data_cleaned[impute_column] = data_cleaned[impute_column].fillna(data_cleaned[impute_column].mean())
-                    elif impute_method == "Median":
-                        data_cleaned[impute_column] = data_cleaned[impute_column].fillna(data_cleaned[impute_column].median())
-                    else:
-                        data_cleaned[impute_column] = data_cleaned[impute_column].fillna(data_cleaned[impute_column].mode()[0])
-                    st.dataframe(data_cleaned)
-
-                # Data Transformation (Normalization / Standardization)
-                st.subheader(":green[Data Transformation: Normalization/Standardization]", divider="green")
-                if st.checkbox("Normalize or Standardize Data"):
-                    transform_column = st.selectbox("Select column for transformation", options=list(data.columns))
-                    transformation_type = st.selectbox("Choose transformation type", options=["Normalization", "Standardization"])
-
-                    if transformation_type == "Normalization":
-                        scaler = MinMaxScaler()
-                        data_cleaned[transform_column] = scaler.fit_transform(data_cleaned[[transform_column]])
-                    elif transformation_type == "Standardization":
-                        scaler = StandardScaler()
-                        data_cleaned[transform_column] = scaler.fit_transform(data_cleaned[[transform_column]])
-
-                    st.dataframe(data_cleaned)
+            # Export Cleaned Data
+            st.subheader(':blue[Download Processed Data]', divider='blue')
+            file_format = st.selectbox('Select file format', options=['CSV', 'Excel', 'JSON'])
+            if file_format == 'CSV':
+                st.download_button('Download CSV', data=data_cleaned.to_csv(), file_name='processed_data.csv', mime='text/csv')
+            elif file_format == 'Excel':
+                st.download_button('Download Excel', data=data_cleaned.to_excel(), file_name='processed_data.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            elif file_format == 'JSON':
+                st.download_button('Download JSON', data=data_cleaned.to_json(), file_name='processed_data.json', mime='application/json')
 
         except Exception as e:
-            st.error(f"Error loading file: {e}")
+            st.error(f"An error occurred while processing the file: {e}")
