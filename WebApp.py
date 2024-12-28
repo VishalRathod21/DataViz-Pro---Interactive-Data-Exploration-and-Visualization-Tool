@@ -5,6 +5,7 @@ import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+from io import BytesIO
 
 # Set page configuration
 st.set_page_config(
@@ -15,33 +16,55 @@ st.set_page_config(
 # Title
 st.title(":red[Data] Wizard Pro")
 
-# Subheader with description of the purpose of the app
-st.subheader("Effortless :red[Exploration, Transformation, and Visualization]", divider="rainbow")
-st.write(":grey[The objective of this Data Explorer app is to provide an intuitive platform for performing data analysis, transformations, and visualizations.]")
+# Subheader with a description of the app's goal
+st.subheader("Effortless :blue[Data Exploration, Visualization, and Transformation]", divider="rainbow")
+st.write(":grey[Welcome to the Data Analyzer app! This tool is designed to provide a seamless experience for analyzing, transforming, and visualizing your data in just a few steps.]")
 
-# File upload description and instructions
-st.subheader("Upload Your Dataset", divider="rainbow")
-st.write(":grey[Upload a CSV, Excel, or JSON file to begin your data analysis.]")
+# Instructions for file upload
+st.subheader("Upload Your Dataset to Start", divider="rainbow")
+st.write(":grey[Simply upload a CSV, Excel, or JSON file, and start your data analysis right away.]")
 
 # File uploader widget
-file = st.file_uploader("Drop csv or excel or json file", type=['csv', 'xlsx', 'json'])
+file = st.file_uploader("Drag and drop your file here (CSV, Excel, or JSON)", type=['csv', 'xlsx', 'json'])
 
-# File size validation and loading
+# File size validation and handling
 if file:
+    # Check if the file size is within the acceptable limit (10 MB)
     if file.size > 10 * 1024 * 1024:  # 10 MB limit
-        st.warning("File size is too large. Please upload a file less than 10MB.")
+        st.warning("The file is too large. Please upload a file less than 10MB.")
     else:
         try:
+            # Determine the file type and read it accordingly
             if file.name.endswith('csv'):
-                data = pd.read_csv(file, encoding='ISO-8859-1')  # You can also try 'latin1' or 'utf-16'
+                data = pd.read_csv(file, encoding='ISO-8859-1')  # Using a common encoding for CSV files
             elif file.name.endswith('xlsx'):
                 data = pd.read_excel(file)
             elif file.name.endswith('json'):
                 data = pd.read_json(file)
             
-            # Displaying the dataframe
+            # Display the dataframe to the user
             st.dataframe(data)
-            st.info('File successfully uploaded', icon='🚨')
+            st.info('Your file has been uploaded successfully! 🎉', icon='🚨')
+            
+            # Generate basic summary statistics for the dataset
+            st.subheader("Quick Dataset Summary")
+            st.write(data.describe())
+            
+            # Show the number of missing values in each column
+            st.subheader("Missing Values in the Dataset")
+            st.write(data.isnull().sum())
+            
+            # Visualize some basic plots
+            st.subheader("Visualizing the Data")
+            st.write("Below are some basic visualizations of your dataset.")
+            
+            # You can add more interactive plots or charts here
+            # For example, a histogram for numeric columns
+            st.write("Basic histogram of the numeric columns:")
+            st.bar_chart(data.select_dtypes(include=['float64', 'int64']).mean())
+            
+        except Exception as e:
+            st.error(f"Oops! Something went wrong while reading your file. Error: {e}")
 
             # Data Summary Tabs
             st.subheader(':rainbow[Basic Information of the Dataset]', divider='rainbow')
@@ -182,10 +205,15 @@ if file:
             # Export Data
             st.subheader(':rainbow[Export Processed Data]', divider='rainbow')
             export_option = st.radio('Choose export format', ['CSV', 'Excel'])
+            
             if export_option == 'CSV':
                 st.download_button(label="Download CSV", data=data_cleaned.to_csv(), file_name="cleaned_data.csv", mime="text/csv")
             elif export_option == 'Excel':
-                st.download_button(label="Download Excel", data=data_cleaned.to_excel(), file_name="cleaned_data.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                # Export to Excel with BytesIO
+                to_excel = BytesIO()
+                data_cleaned.to_excel(to_excel, index=False)
+                to_excel.seek(0)
+                st.download_button(label="Download Excel", data=to_excel, file_name="cleaned_data.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
             # Data Summary Section (Final Insights)
             st.subheader(":rainbow[Data Summary and Insights]", divider="rainbow")
