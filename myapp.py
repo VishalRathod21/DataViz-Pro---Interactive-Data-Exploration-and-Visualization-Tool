@@ -1,7 +1,10 @@
 import pandas as pd
 import plotly.express as px
-import streamlit as st
 import plotly.graph_objects as go
+import streamlit as st
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Set page configuration
 st.set_page_config(
@@ -10,15 +13,15 @@ st.set_page_config(
 )
 
 # Title
-st.title(":red[Data] Master")
+st.title(":red[Data] Wizard Pro")
 
 # Subheader with description of the purpose of the app
 st.subheader("Effortless :red[Exploration, Transformation, and Visualization]", divider="rainbow")
-st.write(":grey[The objective of this Data Master web application is to provide users with an intuitive and interactive platform for performing comprehensive data analysis tasks. This app is designed to assist data analysts, data scientists, and business professionals in quickly understanding and exploring datasets, transforming data as needed, and generating meaningful insights through various data visualization techniques.]")
+st.write(":grey[The objective of this Data Explorer app is to provide an intuitive platform for performing data analysis, transformations, and visualizations.]")
 
 # File upload description and instructions
 st.subheader("Upload Your Dataset", divider="rainbow")
-st.write(":grey[To begin your analysis, simply upload a CSV, Excel, or JSON file containing the dataset you want to explore. This platform will assist you with multiple functionalities including data preview, cleaning, transformation, and visualization.]")
+st.write(":grey[Upload a CSV, Excel, or JSON file to begin your data analysis.]")
 
 # File uploader widget
 file = st.file_uploader("Drop csv or excel or json file", type=['csv', 'xlsx', 'json'])
@@ -38,7 +41,7 @@ if file:
             
             # Displaying the dataframe
             st.dataframe(data)
-            st.info('File is successfully uploaded', icon='🚨')
+            st.info('File successfully uploaded', icon='🚨')
 
             # Data Summary Tabs
             st.subheader(':rainbow[Basic Information of the Dataset]', divider='rainbow')
@@ -48,6 +51,28 @@ if file:
                 st.write(f'There are {data.shape[0]} rows and {data.shape[1]} columns in the dataset.')
                 st.subheader(':gray[Statistical Summary of the Dataset]')
                 st.dataframe(data.describe())
+
+                # Descriptive statistics summary
+                st.subheader(":blue[Descriptive Statistics Summary]")
+                st.write("Mean, Standard Deviation, Min, Max, 25th, 50th, 75th Percentile for each numeric column:")
+                st.dataframe(data.describe())
+
+                # Missing Values Summary
+                st.subheader(":blue[Missing Values Summary]")
+                missing_values = data.isnull().sum()
+                missing_percentage = (missing_values / data.shape[0]) * 100
+                missing_data = pd.DataFrame({"Missing Values": missing_values, "Percentage": missing_percentage})
+                st.dataframe(missing_data)
+
+                # Correlation Matrix Heatmap
+                st.subheader(":blue[Correlation Matrix]")
+                if data.select_dtypes(include=['number']).shape[1] > 1:  # Only if there's more than one numeric column
+                    corr = data.corr()
+                    fig = plt.figure(figsize=(8, 6))
+                    sns.heatmap(corr, annot=True, cmap='coolwarm', fmt='.2f', cbar=True)
+                    st.pyplot(fig)
+                else:
+                    st.write("Not enough numeric columns to generate a correlation matrix.")
 
             with tab2:
                 st.subheader(':gray[Top Rows]')
@@ -64,33 +89,6 @@ if file:
             with tab4:
                 st.subheader('Column Names in Dataset')
                 st.write(list(data.columns))
-
-            # Basic Data Operations - Value Count
-            st.subheader(':rainbow[Column Values to Count]', divider='rainbow')
-            with st.expander('Value Count'):
-                col1, col2 = st.columns(2)
-                with col1:
-                    column = st.selectbox('Choose Column Name', options=list(data.columns))
-                with col2:
-                    toprows = st.number_input('Top rows', min_value=1, step=1)
-                
-                count = st.button('Count')
-                if count:
-                    result = data[column].value_counts().reset_index().head(toprows)
-                    st.dataframe(result)
-                    st.subheader('Visualizations', divider='gray')
-
-                    # Bar chart
-                    fig = px.bar(data_frame=result, x=column, y='count', text='Count')
-                    st.plotly_chart(fig)
-
-                    # Line chart
-                    fig = px.line(data_frame=result, x=column, y='count', text='Count')
-                    st.plotly_chart(fig)
-
-                    # Pie chart
-                    fig = px.pie(data_frame=result, names=column, values='count')
-                    st.plotly_chart(fig)
 
             # Advanced Groupby Operations
             st.subheader(':rainbow[Groupby: Simplify Your Data Analysis]', divider='rainbow')
@@ -114,7 +112,7 @@ if file:
 
                     # Data Visualization
                     st.subheader(":red[Data Visualization]", divider="rainbow")
-                    graph_type = st.selectbox("Choose graph type", options=["line", "bar", "scatter", "pie", "sunburst", "histogram"])
+                    graph_type = st.selectbox("Choose graph type", options=["line", "bar", "scatter", "pie", "sunburst", "histogram", "boxplot"])
 
                     if graph_type == "line":
                         x_axis = st.selectbox("Choose X axis", options=list(result.columns))
@@ -155,6 +153,11 @@ if file:
                         fig = px.histogram(data_frame=result, x=column)
                         st.plotly_chart(fig)
 
+                    elif graph_type == "boxplot":
+                        column = st.selectbox("Choose Column for Boxplot", options=list(result.columns))
+                        fig = px.box(data_frame=result, y=column)
+                        st.plotly_chart(fig)
+
             # Data Cleaning Options (Optional)
             st.subheader(':rainbow[Data Cleaning]', divider='rainbow')
             with st.expander('Clean the Data'):
@@ -183,6 +186,15 @@ if file:
                 st.download_button(label="Download CSV", data=data_cleaned.to_csv(), file_name="cleaned_data.csv", mime="text/csv")
             elif export_option == 'Excel':
                 st.download_button(label="Download Excel", data=data_cleaned.to_excel(), file_name="cleaned_data.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+            # Data Summary Section (Final Insights)
+            st.subheader(":rainbow[Data Summary and Insights]", divider="rainbow")
+            st.write(f"### Summary of the Data")
+            st.write(f"1. **Total Rows**: {data.shape[0]}")
+            st.write(f"2. **Total Columns**: {data.shape[1]}")
+            st.write(f"3. **Data Types**: {data.dtypes.to_dict()}")
+            st.write(f"4. **Missing Values**: \n{missing_data}")
+            st.write(f"5. **Descriptive Statistics**: \n{data.describe()}")
 
         except Exception as e:
             st.error(f"Error loading the file: {e}")
